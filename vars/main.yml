@@ -1,0 +1,37 @@
+---
+# vars file for ECS-test
+
+working_path: /etc/ansible/roles/ecs-test
+
+# Values used for private key generation
+privatekey_path: '{{ working_path }}/files/New-issued-certs-keys/prvkey.pem'
+
+# Values used for the CSR generation
+csr_path: '{{ working_path }}/files/New-issued-certs-keys/csr.pem'
+cert_common_name: ansible.com
+cert_organization_name: Your Organization
+cert_organizational_unit_name: OrgUnit
+cert_country_name: US
+cert_state_or_province_name: MA
+
+# Values used when requesting the certificate from ECS API
+cert_path: '{{ working_path }}/files/New-issued-certs-keys/cert.pem'
+cert_type: STANDARD_SSL
+
+#Request a renew if certificate in cert_path exists and has 10 days remaining
+request_type: RENEW
+days_remaining: 30
+
+# Values used for requests to the API that are independent of specific cert being requested
+requester_name: Taha Hadreez
+requester_email: taha@ansible.com
+requester_phone: 888-888-888
+
+# Username/password from when generating API credentials
+entrust_api_user: API-username  
+entrust_api_key: API-password
+
+# PEM encoded certificate and key information
+entrust_api_client_cert_path: '{{ working_path }}/files/apiClientCert.pem'
+entrust_api_client_cert_key_path: '{{ working_path }}/files/apiClientKey.pem'
+entrust_api_specification_path: '{{ working_path }}/files/cms-api-2.1.0.yaml'

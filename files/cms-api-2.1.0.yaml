@@ -1,0 +1,3328 @@
+swagger: '2.0'
+info:
+  version: 2.1.0
+  title: Entrust Certificate Services Enterprise API
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+host: api.entrust.net
+basePath: /enterprise/v2
+schemes:
+  - https
+security:
+  - basicAuth: []
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /application/version:
+    get:
+      summary: Application version
+      tags:
+        - application
+      operationId: GetAppVersion
+      responses:
+        '200':
+          description: Application version with build number
+          schema:
+            type: object
+            properties:
+              version:
+                type: string
+                example: 12.5.0.138
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /auditLogs:
+    get:
+      summary: |
+        Get a collection of audit log entries.
+      tags:
+        - auditLog
+      operationId: GetAuditLogs
+      parameters:
+        - name: activityDate
+          description: |
+            activityDate filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - activityDate=ge:2018-01-01T00:00:00.000Z
+            - activityDate=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+        - name: activity
+          description: |
+            activity filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - activity=Login
+            - activity=con:Login
+          in: query
+          type: string
+        - name: userName
+          description: |
+            userName filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - userName=John
+            - userName=con:John
+          in: query
+          type: string
+        - name: userRole
+          description: |
+            userRole filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - userRole=Requester
+            - userRole=con:Requester
+          in: query
+          type: string
+        - name: comments
+          description: |
+            comments filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - comments=Initial login process
+            - comments=con:process
+          in: query
+          type: string
+        - $ref: '#/parameters/auditLogFieldsParam'
+        - $ref: '#/parameters/sort'
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              summary:
+                $ref: '#/definitions/Summary'
+              auditLogs:
+                type: array
+                items:
+                  $ref: '#/definitions/AuditLog'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /async/certificates:
+    post:
+      summary: Queue a new asynchronous certificate request
+      tags:
+        - asynchronous
+      operationId: NewAsyncCertRequest
+      parameters:
+        - name: Body
+          in: body
+          required: true
+          description: Certificate request
+          schema:
+            $ref: '#/definitions/NewCertificateRequest'
+      responses:
+        '202':
+          description: Request accepted and queued for processing
+          headers:
+            Location:
+              description: |
+                Location where the status of the asynchronous job can be found. For example, /async/jobs/a627a9f3-6da9-4882-9ebe-c04258dc3415
+              type: string
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /async/jobs/{jobId}:
+    get:
+      summary: Get the details on the status of an asynchronous job.
+      tags:
+        - asynchronous
+      operationId: GetAsyncJobDetails
+      parameters:
+        - name: jobId
+          in: path
+          description: Job Id of the request
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            $ref: '#/definitions/AsyncJobDetails'
+        '404':
+          description: Unknown jobId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /certificates:
+    post:
+      summary: New certificate request
+      tags:
+        - certificate
+      operationId: NewCertRequest
+      parameters:
+        - name: Body
+          in: body
+          required: true
+          description: Certificate request
+          schema:
+            $ref: '#/definitions/NewCertificateRequest'
+      responses:
+        '200':
+          description: The request had the validateOnly flag set to true and validation was successful.
+        '201':
+          description: Certificate created
+          schema:
+            $ref: '#/definitions/CertificateResponse'
+        '202':
+          description: Request accepted and queued for approval
+          schema:
+            $ref: '#/definitions/PendingCertificateResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    get:
+      summary: |
+        Get a collection of certificates.
+      tags:
+        - certificate
+      operationId: GetCertificates
+      parameters:
+        - name: trackingId
+          description: |
+            trackingId filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - trackingId=123
+            - trackingId=in:123,456,789
+          in: query
+          type: string
+        - name: status
+          description: |
+            status filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - status=ACTIVE
+            - status=eq:ACTIVE
+            - status=in:ACTIVE,READY
+          in: query
+          type: string
+        - name: dn
+          description: |
+            dn filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - dn=con:Marketing
+            - dn=con:ou%3DMarketing ('=' sign in 'ou=Marketing' is URL encoded)
+          in: query
+          type: string
+        - name: serialNumber
+          description: |
+            serialNumber filter, supported operators:
+            - eq (default)
+            - in
+            - con
+            Examples:
+            - serialNumber=239010FB4DD0FD050000000053DA5896
+            - serialNumber=in:239010FB4DD0FD050000000053DA5896,4EDBA588DB08C8600000000053DA889C
+          in: query
+          type: string
+        - name: subjectAltName
+          description: |
+            subjectAltName filter, supported operators:
+            - con (contains)
+            - in
+            - =
+            The filter is applied to all names in the SubjectAltName. 
+            "con": A SAN is returned if any of the name values in the subjectAltName match the filter expression. For example, "subjectAltName=con:entrustdatacard.com" returns SANs like dev.entrustdatacard.com, www.entrustdatacard.com, or 123entrustdatacard.com.
+            "=": A SAN is returned if the SAN list is a singleton that matches the provided domain, or if a matching comma-space concatenated list is provided.
+            Examples:
+            - subjectAltName=www.entrustdatacard.com
+            - subjectAltName=admin@entrustdatacard.com
+            - subjectAltName=con:entrustdatacard.com
+          in: query
+          type: string
+        - name: issueDateTime
+          description: |
+            issueDateTime filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - issueDateTime=ge:2018-01-01T00:00:00.000Z
+            - issueDateTime=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+        - name: expiresAfter
+          description: |
+            expiresAfter filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - expiresAfter=ge:2018-01-01T00:00:00.000Z
+            - expiresAfter=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+        - name: signingAlg
+          description: |
+            signingAlg filter, supported operators:
+            - eq (default)
+            - in
+            - con
+            Examples:
+            - signingAlg=SHA-1
+            - signingAlg=in:SHA-1,SHA-2
+          in: query
+          type: string
+        - name: eku
+          description: |
+            extended key usage filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - eku=CLIENT_AUTH
+            - eku=in:SERVER_AUTH,SERVER_AND_CLIENT_AUTH
+          in: query
+          type: string
+        - name: keySize
+          description: |
+            keySize filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - keySize=2048
+            - keySize=lt:2048
+          in: query
+          type: string
+        - name: keyType
+          description: |
+            keyType filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - keyType=RSA
+            - keyType=EC
+          in: query
+          type: string
+        - name: org
+          description: |
+            org filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - org=Entrust Datacard
+            - org=con:Entrust
+          in: query
+          type: string
+        - name: ou
+          description: |
+            ou filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - ou=Development
+            - ou=con:Marketing
+          in: query
+          type: string
+        - name: certType
+          description: |
+            certType filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - certType=SMIME_ENT
+            - certType=in:STANDARD_SSL,ADVANTAGE_SSL,EV_SSL,UC_SSL,WILDCARD_SSL
+          in: query
+          type: string
+        - name: tracking.trackingInfo
+          description: |
+            tracking.trackingInfo filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.trackingInfo=Development
+            - tracking.trackingInfo=con:Purchase
+          in: query
+          type: string
+        - name: tracking.requesterName
+          description: |
+            tracking.requesterName filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.requesterName=Bob
+            - tracking.requesterName=con:Eve
+          in: query
+          type: string
+        - name: tracking.requesterEmail
+          description: |
+            tracking.requesterEmail filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.requesterEmail=admin@entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.requesterPhone
+          description: |
+            tracking.requesterPhone filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.requesterPhone=613-555-5555
+          in: query
+          type: string
+        - name: tracking.additionalEmails
+          description: |
+            tracking.additionalEmails filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            The filter is applied to all email addresses. A match is returned if _any_ of the emails in additionalEmails matches the filter expression. 
+            Examples:
+            - tracking.additionalEmails=admin@entrustdatacard.com
+            - tracking.additionalEmails=con:entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.customFields.text1
+          description: |
+            tracking.customFields.text1 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text1=acme
+            - tracking.customFields.text1=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text2
+          description: |
+            tracking.customFields.text2 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text2=acme
+            - tracking.customFields.text2=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text3
+          description: |
+            tracking.customFields.text3 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text3=acme
+            - tracking.customFields.text3=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text4
+          description: |
+            tracking.customFields.text4 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text4=acme
+            - tracking.customFields.text4=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text5
+          description: |
+            tracking.customFields.text5 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text5=acme
+            - tracking.customFields.text5=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text6
+          description: |
+            tracking.customFields.text6 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text6=acme
+            - tracking.customFields.text6=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text7
+          description: |
+            tracking.customFields.text7 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text7=acme
+            - tracking.customFields.text7=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text8
+          description: |
+            tracking.customFields.text8 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text8=acme
+            - tracking.customFields.text8=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text9
+          description: |
+            tracking.customFields.text10 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text10=acme
+            - tracking.customFields.text10=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text10
+          description: |
+            tracking.customFields.text11 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text11=acme
+            - tracking.customFields.text11=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text11
+          description: |
+            tracking.customFields.text12 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text12=acme
+            - tracking.customFields.text12=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text12
+          description: |
+            tracking.customFields.text13 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text13=acme
+            - tracking.customFields.text13=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text13
+          description: |
+            tracking.customFields.text14 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text14=acme
+            - tracking.customFields.text14=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text14
+          description: |
+            tracking.customFields.text15 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text15=acme
+            - tracking.customFields.text15=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.text15
+          description: |
+            tracking.customFields.text15 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.text15=acme
+            - tracking.customFields.text15=con:acme
+          in: query
+          type: string
+        - name: tracking.customFields.number1
+          description: |
+            tracking.customFields.number1 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.number1=8
+            - tracking.customFields.number1=gt:0
+          in: query
+          type: string
+        - name: tracking.customFields.number2
+          description: |
+            tracking.customFields.number2 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.number2=8
+            - tracking.customFields.number2=gt:0
+          in: query
+          type: string
+        - name: tracking.customFields.number3
+          description: |
+            tracking.customFields.number3 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.number3=8
+            - tracking.customFields.number3=gt:0
+          in: query
+          type: string
+        - name: tracking.customFields.number4
+          description: |
+            tracking.customFields.number4 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.number4=8
+            - tracking.customFields.number4=gt:0
+          in: query
+          type: string
+        - name: tracking.customFields.number5
+          description: |
+            tracking.customFields.number5 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.number5=8
+            - tracking.customFields.number5=gt:0
+          in: query
+          type: string
+        - name: tracking.customFields.date1
+          description: |
+            tracking.customFields.date1 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.date1=gt:2018-01-01
+          in: query
+          type: string
+        - name: tracking.customFields.date2
+          description: |
+            tracking.customFields.date2 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.date2=gt:2018-01-01
+          in: query
+          type: string
+        - name: tracking.customFields.date3
+          description: |
+            tracking.customFields.date3 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.date3=gt:2018-01-01
+          in: query
+          type: string
+        - name: tracking.customFields.date4
+          description: |
+            tracking.customFields.date4 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.date4=gt:2018-01-01
+          in: query
+          type: string
+        - name: tracking.customFields.date5
+          description: |
+            tracking.customFields.date5 filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - tracking.customFields.date5=gt:2018-01-01
+          in: query
+          type: string
+        - name: tracking.customFields.email1
+          description: |
+            tracking.customFields.email1 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.email1=user@entrustdatacard.com
+            - tracking.customFields.email1=con:entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.customFields.email2
+          description: |
+            tracking.customFields.email2 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.email2=user@entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.customFields.email3
+          description: |
+            tracking.customFields.email3 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.email3=user@entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.customFields.email4
+          description: |
+            tracking.customFields.email4 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.email4=user@entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.customFields.email5
+          description: |
+            tracking.customFields.email5 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.email5=user@entrustdatacard.com
+          in: query
+          type: string
+        - name: tracking.customFields.dropdown1
+          description: |
+            tracking.customFields.dropdown1 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.dropdown1=red
+          in: query
+          type: string
+        - name: tracking.customFields.dropdown2
+          description: |
+            tracking.customFields.dropdown2 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.dropdown2=red
+          in: query
+          type: string
+        - name: tracking.customFields.dropdown3
+          description: |
+            tracking.customFields.dropdown3 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.dropdown3=red
+          in: query
+          type: string
+        - name: tracking.customFields.dropdown4
+          description: |
+            tracking.customFields.dropdown4 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.dropdown4=red
+          in: query
+          type: string
+        - name: tracking.customFields.dropdown5
+          description: |
+            tracking.customFields.dropdown5 filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in
+            Examples:
+            - tracking.customFields.dropdown5=red
+          in: query
+          type: string
+        - name: domainUsed
+          description: |
+            domainUsed filter, supported operators:
+            - eq (default)
+            - con (contains)
+            - in 
+            Examples:
+            - domainUsed=entrustdatacard.com
+          in: query
+          type: string
+        - name: isThirdParty
+          description: |
+            isThirdParty filter, supported operators:
+            - eq (default)
+            Examples:
+            - isThirdParty=false
+          in: query
+          type: string
+        - $ref: '#/parameters/certificateFieldsParam'
+        - $ref: '#/parameters/sort'
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              summary:
+                $ref: '#/definitions/Summary'
+              certificates:
+                type: array
+                items:
+                  $ref: '#/definitions/Certificate'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/certificates/{trackingId}':
+    get:
+      summary: Get a certificate
+      tags:
+        - certificate
+      operationId: GetCertificate
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of certificate
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            $ref: '#/definitions/CertificateEx'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    patch:
+      summary: Update an existing certificate.
+      tags:
+        - certificate
+      operationId: UpdateCertificate
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of the certificate to update
+          required: true
+          type: integer
+        - name: Body
+          in: body
+          required: true
+          description: Update operation name
+          schema:
+            $ref: '#/definitions/CertificatePatchRequest'
+      responses:
+        '200':
+          description: Operation successful
+        '201':
+          description: Certificate created. This result is possible only if the CertificateOperation is APPROVE
+          schema:
+            $ref: '#/definitions/CertificateResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/certificates/{trackingId}/reissues':
+    post:
+      summary: Reissue certificate request
+      tags:
+        - certificate
+      operationId: ReissueCertRequest
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of certificate to re-issue
+          required: true
+          type: integer
+        - name: Body
+          in: body
+          required: true
+          description: Certificate request
+          schema:
+            $ref: '#/definitions/ReissueCertificateRequest'
+      responses:
+        '201':
+          description: Certificate created
+          schema:
+            $ref: '#/definitions/CertificateResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/certificates/{trackingId}/renewals':
+    post:
+      summary: Renew certificate request
+      tags:
+        - certificate
+      operationId: RenewCertRequest
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of certificate to re-new
+          required: true
+          type: integer
+        - name: Body
+          in: body
+          required: true
+          description: Certificate request
+          schema:
+            $ref: '#/definitions/RenewCertificateRequest'
+      responses:
+        '201':
+          description: Certificate created
+          schema:
+            $ref: '#/definitions/CertificateResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/certificates/{trackingId}/revocations':
+    post:
+      summary: Revoke certificate request
+      tags:
+        - certificate
+      operationId: RevokeCertRequest
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of certificate to revoke
+          required: true
+          type: integer
+        - name: Body
+          in: body
+          required: true
+          description: Certificate revocation request
+          schema:
+            $ref: '#/definitions/RevokeCertificateRequest'
+      responses:
+        '200':
+          description: Certificate revoked
+        '400':
+          description: Certificate cannot be revoked
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/certificates/{trackingId}/deactivations':
+    post:
+      summary: Deactivate certificate request
+      tags:
+        - certificate
+      operationId: DeactivateCertRequest
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of certificate to deactivate
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Certificate deactivated
+        '400':
+          description: Certificate cannot be deactivated
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/certificates/{trackingId}/tracking':
+    put:
+      summary: Update certificate tracking information
+      tags:
+        - certificate
+      operationId: UpdateCertTracking
+      parameters:
+        - name: trackingId
+          in: path
+          description: Tracking ID of certificate to update tracking data
+          required: true
+          type: integer
+        - name: Body
+          in: body
+          required: true
+          description: |
+            Certificate tracking data update request:
+            Warning - This call overwrites all of the existing tracking info with the information included in the call. If the tracking info in the request is empty, the existing tracking info is erased
+          schema:
+            $ref: '#/definitions/UserSpecifiableTrackingData'
+      responses:
+        '200':
+          description: Certificate tracking data updated
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown trackingId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/clients':
+    post:
+      summary: Submit a request for a new non-primary client
+      tags:
+        - client
+      operationId: AddClient
+      parameters:
+        - name: Body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AddClientRequest'  
+      responses:
+        '202':
+          description: Add client request accepted
+          headers:
+            Location:
+              description: |
+                Location of the new client resource, for example:
+                /clients/3/
+              type: string
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'  
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'              
+    get:
+      summary: Get a list of clients
+      tags:
+        - client
+      operationId: GetClients
+      responses: 
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              clients:
+                type: array
+                items:
+                  $ref: '#/definitions/Client'            
+            example:
+              clients:
+                - uri: '/enterprise/v2/clients/1'
+                  clientId: 1
+                  clientName: 'Example Organization'
+                  friendlyClientName: 'Example Org Friendlyname'
+                  verificationStatus: 'APPROVED'
+                  ovExpiryDate: '2019-06-01T12:24:27.627Z'
+                  evVerificationStatus: 'APPROVED'
+                  evExpiryDate: '2019-06-05T13:24:29.337Z'
+                  qvVerificationStatus: 'APPROVED'
+                  qvExpiryDate: '2019-06-05T13:24:29.337Z'
+                - uri: '/enterprise/v2/clients/2'
+                  clientId: 2
+                  clientName: 'Example Pending Organization'
+                  friendlyClientName: 'Example Pending Org Friendlyname'
+                  verificationStatus: 'Pending'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/clients/{clientId}':
+    get:
+      summary: Get detailed information on a single client
+      tags: 
+        - client
+      operationId: GetClient
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            $ref: '#/definitions/ClientEx'
+        '404':
+          description: Unknown clientId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/clients/{clientId}/organizations':
+    get:
+      summary: Get a list of organizations for a single client
+      tags: 
+        - client
+      operationId: GetClientOrganizations
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              organizations:
+                type: array
+                items: 
+                  $ref: '#/definitions/Organization'
+            example:
+              organizations:
+                - name: First Organization
+                  verificationStatus: APPROVED
+                - name: Second Organization
+                  verificationStatus: PENDING
+                - name: Third Organization
+                  verificationStatus: EXPIRED
+        '404':
+          description: Unknown clientId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/clients/{clientId}/organizationalUnits':
+    get:
+      summary: Get a list of organizational units for a single client
+      tags: 
+        - client
+      operationId: GetClientOrganizationalUnits
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              organizationalunits:
+                type: array
+                items: 
+                  $ref: '#/definitions/OrganizationalUnit'
+            example:
+              organizationalunits:
+                - name: First Organizational Unit
+                  verificationStatus: APPROVED
+                - name: Second Organizational Unit
+                  verificationStatus: PENDING
+                - name: Third Organizational Unit
+                  verificationStatus: EXPIRED            
+        '404':
+          description: Unknown clientId
+          schema:
+            $ref: '#/definitions/ErrorResponse' 
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'            
+  '/organizations':
+    get:
+      summary: Get a list of organizations for your account (across all clients)
+      tags: 
+        - organization
+      operationId: GetOrganizations
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              organizations:
+                type: array
+                items: 
+                  $ref: '#/definitions/Organization'
+            example:
+              organizations:
+                - name: First Organization
+                  verificationStatus: APPROVED
+                  clientId: 1
+                - name: Second Organization
+                  verificationStatus: PENDING
+                  clientId: 1
+                - name: Third Organization
+                  verificationStatus: EXPIRED
+                  clientId: 1
+                - name: Another Client Organization
+                  verificationStatus: APPROVED
+                  clientId: 2
+                - name: Deactivated Client Organization
+                  verificationStatus: DEACTIVATED
+                  clientId: 3
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/organizationalUnits':
+    get:
+      summary: Get a list of organizational units for your account (across all clients)
+      tags: 
+        - organizational unit
+      operationId: GetOrganizationalUnits
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              organizations:
+                type: array
+                items: 
+                  $ref: '#/definitions/OrganizationalUnit'
+            example:
+              organizationalunits:
+                - name: First Organizational Unit
+                  verificationStatus: APPROVED
+                  clientId: 1
+                - name: Second Organizational Unit
+                  verificationStatus: PENDING
+                  clientId: 1
+                - name: Third Organizational Unit
+                  verificationStatus: EXPIRED
+                  clientId: 1
+                - name: Another Client Organizational Unit
+                  verificationStatus: APPROVED
+                  clientId: 2
+  '/domains':
+    get:
+      summary: Get a list of domains
+      tags:
+        - domain
+      operationId: GetAllDomains
+      parameters:
+        - name: domainName
+          description: |
+            domainName filter, supported operators:
+            - eq (default)
+            - con
+            Examples:
+            - domainName=example.com
+            - domainName=con:example
+          type: string
+          in: query
+        - name: verificationMethod
+          description: |
+            verificationMethod filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - verificationMethod=DNS
+            - verificationMethod=eq:EMAIL
+            - verificationMethod=in:MANUAL,WEB_SERVER
+          type: string
+          in: query
+        - name: verificationStatus
+          description: |
+            verificationStatus filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - verificationStatus= APPROVED        - 
+            - verificationStatus=eq:EXPIRED
+            - verificationStatus=in:INITIAL_VERIFICATION,RE_VERIFICATION
+          type: string
+          in: query
+        - name: ovEligible
+          description: |
+            ovEligible filter, supported operators:
+            - eq (default)
+            Examples:
+            - ovEligible=true
+            - ovEligible=false
+          type: boolean
+          in: query
+        - name: ovExpiry
+          description: |
+            ovExpiry filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - ovExpiry=ge:2018-01-01T00:00:00.000Z
+            - ovExpiry=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+          format: date-time
+        - name: evEligible
+          description: |
+            evEligible filter, supported operators:
+            - eq (default)
+            Examples:
+            - evEligible=true
+            - evEligible=false
+          type: boolean
+          in: query
+        - name: evExpiry
+          description: |
+            evExpiry filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - evExpiry=ge:2018-01-01T00:00:00.000Z
+            - evExpiry=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+          format: date-time
+        - name: clientId
+          description: |
+            clientId filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - clientId=1
+            - clientId=in:1,2,3
+          in: query
+          type: integer
+        - $ref: '#/parameters/sort'
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              summary:
+                $ref: '#/definitions/Summary'
+              domains:
+                type: array
+                items:
+                  $ref: '#/definitions/Domain'      
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'                  
+  '/clients/{clientId}/domains':
+    post:
+      summary: Add a domain to a client
+      tags:
+        - domain
+      operationId: AddDomain
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.
+          required: true
+          type: integer
+        - name: Body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AddDomainRequest'
+      responses:
+        '202':
+          description: Add domain request accepted
+          headers:
+            Location:
+              description: |
+                Location of the new domain resource, for example:
+                /clients/1/domains/testcertificates.com
+              type: string
+            Retry-After:
+              description: |
+                How long the client should wait before requesting the domain resource identified by the location header. The allowed format is specified in RFC 7231, for example: 
+                Retry-After: Tue, 22 May 2018 20:23:01 GMT
+              type: string
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown clientId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    get:
+      summary: Get domains associated with a client
+      tags:
+        - domain
+      operationId: GetDomains
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.          
+          required: true
+          type: integer
+        - name: domainName
+          description: |
+            domainName filter, supported operators:
+            - eq (default)
+            - con
+            Examples:
+            - domainName=example.com
+            - domainName=con:example
+          type: string
+          in: query
+        - name: verificationMethod
+          description: |
+            verificationMethod filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - verificationMethod=DNS
+            - verificationMethod=eq:EMAIL
+            - verificationMethod=in:MANUAL,WEB_SERVER
+          type: string
+          in: query
+        - name: verificationStatus
+          description: |
+            verificationStatus filter, supported operators:
+            - eq (default)
+            - in
+            Examples:
+            - verificationStatus= APPROVED        - 
+            - verificationStatus=eq:EXPIRED
+            - verificationStatus=in:INITIAL_VERIFICATION,RE_VERIFICATION
+          type: string
+          in: query
+        - name: ovEligible
+          description: |
+            ovEligible filter, supported operators:
+            - eq (default)
+            Examples:
+            - ovEligible=true
+            - ovEligible=false
+          type: boolean
+          in: query
+        - name: ovExpiry
+          description: |
+            ovExpiry filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - ovExpiry=ge:2018-01-01T00:00:00.000Z
+            - ovExpiry=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+          format: date-time
+        - name: evEligible
+          description: |
+            evEligible filter, supported operators:
+            - eq (default)
+            Examples:
+            - evEligible=true
+            - evEligible=false
+          type: boolean
+          in: query
+        - name: evExpiry
+          description: |
+            evExpiry filter, supported operators:
+            - eq (default)
+            - gt
+            - ge
+            - lt
+            - le
+            Examples:
+            - evExpiry=ge:2018-01-01T00:00:00.000Z
+            - evExpiry=lt:2018-01-01T00:00:00.000Z
+          in: query
+          type: string
+          format: date-time
+        - $ref: '#/parameters/sort'
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              summary:
+                $ref: '#/definitions/Summary'
+              domains:
+                type: array
+                items:
+                  $ref: '#/definitions/Domain'
+        '404':
+          description: Unknown clientId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/clients/{clientId}/domains/{domain}':
+    get:
+      summary: Get a domain for a client
+      tags:
+        - domain
+      operationId: GetDomain
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.
+          required: true
+          type: integer
+        - name: domain
+          in: path
+          description: Domain 
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Domain returned
+          schema:
+            $ref: '#/definitions/DomainEx'
+        '404':
+          description: Unknown clientId or domain
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    put:
+      summary: Reverify a domain for a client
+      tags:
+        - domain
+      operationId: ReverifyDomain
+      parameters:
+        - name: clientId
+          in: path
+          description: |
+            Client ID of client. 
+            For the primary client, this is 1.
+          required: true
+          type: integer
+        - name: domain
+          in: path
+          description: Domain 
+          required: true
+          type: string
+        - name: Body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateDomainRequest'
+      responses:
+        '202':
+          description: Reverify domain request accepted
+          headers:
+            Location:
+              description: |
+                Location of the new domain resource, for example:
+                /clients/1/domains/testcertificates.com
+              type: string
+            Retry-After:
+              description: |
+                How long the client should wait before requesting the domain resource identified by the location header. The allowed format is specified in RFC 7231, for example: 
+                Retry-After: Tue, 22 May 2018 20:23:01 GMT
+              type: string
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Unknown clientId
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Problem with the request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /customFields:
+    get:
+      summary: Get custom field configurations for the account
+      tags:
+        - account
+      operationId: GetCustomFieldConfig
+      responses:
+        '200':
+          description: Request accepted
+          schema:
+            $ref: '#/definitions/CustomFields'
+        '404':
+          description: Not enabled
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /inventories:
+    get:
+      summary: Get a list of account inventories
+      tags:
+        - inventory
+      operationId: GetInventory
+      responses: 
+        '200':
+          description: Request accepted
+          schema:
+            type: object
+            properties:
+              inventory:
+                type: array
+                items:
+                  $ref: '#/definitions/InventoryItem'            
+            example:
+              inventory:
+                - productType: 'STANDARD_SSL'
+                  totalCount: 10
+                  remainingCount: 9
+                  usedCount: 1
+                - productType: 'CMS_1_ADMIN'
+                  totalCount: 5
+                  remainingCount: 5
+                  usedCount: 0  
+        '429':
+          description: Too many requests
+          headers:
+            X-Rate-Limit-Limit:
+              description: |
+                Maximum number of requests allowed in a 30 second period.
+              type: integer
+            Retry-After:
+              description: |
+                The number of seconds the client should wait before retrying the rate limited request, for example: 
+                Retry-After: 2
+              type: integer
+definitions:
+  NewCertificateRequest:
+    title: New Certificate Request
+    allOf:
+      - $ref: '#/definitions/RenewCertificateRequest'
+      - properties:          
+          validateOnly:
+            description: |
+              If the validateOnly flag is set to true, the request contents will be validated for correctness but will not otherwise be processed. No inventory will be consumed and no certificate will be generated.
+            type: boolean
+            default: false
+          certType:
+            description: |
+              Certificate type to request
+              Supported types are:
+                * STANDARD_SSL
+                * ADVANTAGE_SSL
+                * UC_SSL
+                * EV_SSL
+                * QWAC_SSL
+                * PSD2_SSL
+                * WILDCARD_SSL
+                * PRIVATE_SSL
+                * PD_SSL
+                * CODE_SIGNING
+                * EV_CODE_SIGNING
+                * CDS_INDIVIDUAL
+                * CDS_GROUP
+                * CDS_ENT_LITE
+                * CDS_ENT_PRO
+                * SMIME_ENT
+            type: string
+          queueForApproval:
+            description: >
+              For all SSL and Document Signing certificate types&#58;
+                * If set to true, certificate request is queued for approval by an administrator. 
+                * If set to false (default), the certificate is generated immediately.         
+            type: boolean
+            default: false
+    required:
+      - certType
+  RenewCertificateRequest:
+    title: Renew Certificate Request
+    allOf:
+      - $ref: '#/definitions/ReissueCertificateRequest'
+      - properties:
+          certExpiryDate:
+            description: |
+              The date the certificate is set to expire (pooling accounts only).
+              An RFC3339 compliant date, for example&#58; YYYY-MM-DD
+              Note that only the date (day, month, year) is supported for specifying expiry date. If you choose to specify an expiry time with the expiry date, the time will be adjusted to Eastern Standard Time (EST). This could have the unintended effect of moving your expiry date to the previous day.
+            type: string
+            format: date
+          certLifetime:
+            description: |
+              The lifetime of the certificate. Applies to all non-pooling accounts and to CDS_INDIVIDUAL, CDS_GROUP, CDS_ENT_LITE, CDS_ENT_PRO, and SMIME_ENT certificates, regardless of account type. 
+              This value is specified as an ISO 8601 duration. 
+              Allowed values are: 'P1Y', 'P2Y', and 'P3Y'.
+            type: string
+  ReissueCertificateRequest:
+    title: Reissue Certificate Request
+    type: object
+    properties:
+      csr:
+        description: Base-64 encoded Certificate Signing Request (CSR). CSR is accepted with or without PEM formatting around the Base-64 string.
+        type: string
+      subjectAltName:
+        description: |
+          The subjectAltName identifier, as an array of values (applies to STANDARD_SSL, ADVANTAGE_SSL, UC_SSL, EV_SSL, QWAC_SSL, PSD2_SSL, WILDCARD_SSL, PRIVATE_SSL, and PD_SSL certificate types).
+            * If you are requesting a new SSL certificate, and you pass a subjectAltName parameter, any SAN names in the CSR are ignored. If no subjectAltName parameter is passed, the SAN names in the CSR are used. 
+            * See the requesttype parameter (further in this table) to understand more about SANs during reissues and renewals.
+            * In the case of Standard certificates, if the CN of the certificate is <domain>.<tld> only the www.<domain>.<tld> value is accepted. If the CN of the certificate is www.<domain>.<tld> only the <domain>.<tld> value is accepted.
+        type: array
+        items:
+          type: string
+      signingAlg:
+        description: |
+          Signing algorithm of certificate (SHA-1 or SHA-2).  The account default is used if not specified. 
+          - This parameter is only applicable when the account preference is set to "Select signing algorithm at certificate generation time."
+          - As of January 1, 2016 any certificates except Private SSL (PRIVATE_SSL) certificates being issued, reissued, or renewed will use SHA2, even if the SHA1 algorithm is specified in the request. Private SSL certificates can continue to use SHA-1.
+        type: string
+        enum:
+          - SHA-1
+          - SHA-2
+        default: SHA-2
+      eku:
+        description: Extended Key Usage - applicable to all public SSL certificate types
+        type: string
+        enum:
+          - SERVER_AUTH
+          - CLIENT_AUTH
+          - SERVER_AND_CLIENT_AUTH
+        default: SERVER_AND_CLIENT_AUTH
+      ctLog:
+        description: |
+          In compliance with browser requirements, this certificate may be posted to the Certificate Transparency (CT) logs. This is a best practice technique that helps domain owners monitor certificates issued to their domains. Note that not all certificates are eligible for CT logging.
+          * If ctLog is not specified, the certificate uses the account default.
+          * If ctLog is specified and the account settings allow it, ctLog overrides the account default.
+          * If ctLog is set to *false*, but the account settings is set to "always log", the certificate generation will fail.
+        type: boolean
+      cn:
+        description: |
+          Common Name (CN) attribute in the DN. 
+          Applicable to S/MIME and Document Signing only.
+        type: string
+      certEmail:
+        description: |
+          email attribute in the DN. 
+          Applicable to S/MIME and Document Signing only.
+        type: string
+        format: email
+        maxLength: 254
+      upn:
+        description: |
+          User Principal Name.
+          Applicable to the SMIME_ENT certificate types only. If specified, it must be a valid email address and its domain must be the approved domain for that client.
+        type: string
+        format: email
+        maxLength: 254
+      clientId:
+        description: |
+          The client ID. The ID of the primary client is 1. If the clientId is not specified, 1 is used.
+        type: integer
+        default: 1
+      org:
+        description: |
+          When there is an org parameter specified in the request, it is used in the certificate created, even if there is already an Org in the CSR (O=).
+          When there is no org parameter specified in the request, the organization from the Client is used when creating all certificate types except for Private Dedicated SSL (PDSSL).
+          In the case of PDSSL certificates only: if there is no org parameter in the request, the organization in the CSR is used, when it is available. If there is no org value in the CSR, then the client organization is used.
+          Note that the org parameter is valid for use only with clientId=1, for all certificate types except for PDSSL. When requesting PDSSL certificates, the org parameter can be used in requests for any clientId.
+        type: string
+      ou:
+        description: |
+          The organizational unit. This parameter can be set to the name of the 'ou' or '' (i.e. ignore CSR ou and do not set the OU). See the behavior below.
+          This parameter is valid for SSL and S/MIME certificate types. 'ou' behavior is dependent on whether organizational units are enabled for your account. 
+
+          If ou is disabled for your account:
+          * New certificates- OUs from CSRs or the 'ou' input parameters are ignored.
+          * Reissued certificates- OUs from CSRs, or the 'ou' input parameters are ignored.
+          * Renewed certificates- OUs from CSRs, or the 'ou' input parameters are ignored.
+
+          If OUs are enabled for your account:
+          * New certificates- Valid OUs from CSRs are used. Invalid OUs from CSRs are ignored. The OU in the CSR is overridden by a valid "ou" from the input parameter, however if the OU is invalid, an "Unapproved OU" error is generated.
+          * Reissued certificates-  If the CSR is not specified when reissuing, then the OU from the CSR of the original certificate is used as the default OU. The OU is ignored if it is invalid. If a new CSR is used when the certificate is reissued, the OU from the CSR is used as the default OU. 
+           If a new CSR with no OU is used, the certificate is reissued without an OU. The original OU in the CSRis overridden by a valid 'ou' or '' from the input parameter, however if the OU is invalid, an "Unapproved OU" error is generated.
+          * Renewed certificates- If no CSR is specified when the certificate is renewed, the OU of the CSR from the original certificate is used. The OU is ignored if it is invalid. If a new CSR is used and contains a valid OU, the OU from the CSR is used. If the CSR is replaced and contains no OU, the certificate is renewed without an OU. The original OU in the certificate is overridden by a valid 'ou' or '' (i.e. no OU) from the input parameter, or by the OU in a replacement CSR, however if the OU is invalid an "Unapproved OU" error is generated.
+
+          Multiple OUs are reserved for future products. A maximum of one OU may be specified for current products.
+        type: array
+        items:
+          type: string
+      password:
+        description: |
+          The certificate pickup password.
+          * A password must be used if it is set to "required" in the account under Options > Certificate Pickup Password. A password is used to protect SMIME_ENT certificates without CSRs. The password protects the returned PKCS12 containing the private key and certificate.
+          * If a password and CSR are provided in an SMIME_ENT certificate request, the CSR will be used, and the password will be ignored.
+        type: string
+      tracking:
+        $ref: '#/definitions/UserSpecifiableTrackingData'
+      endUserKeyStorageAgreement: 
+        type: boolean
+        description: |
+          The end user of the Code Signing certificate must generate and store the private key for this request on cryptographically secure hardware to be compliant with the Entrust CSP and Subscription agreement. 
+          You must set the endUserKeyStorageAgreement flag to true, to acknowledge that you will inform the user of this requirement.
+          Applicable to Code Signing certificate types only.
+  RevokeCertificateRequest:
+    title: Revoke Certificate Request
+    type: object
+    properties:
+      crlReason:
+        $ref: '#/definitions/CRLReason'
+      revocationComment:
+        description: |
+          Comment field to explain the reason for revocation
+        type: string
+    example:
+      crlReason: superseded
+      revocationComment: 'Example revocation reason'
+  CertificateResponse:
+    title: Certificate Response
+    type: object
+    properties:
+      trackingId:
+        $ref: '#/definitions/TrackingId'
+      endEntityCert:
+        description: |
+          PEM-encoded certificate
+        type: string
+      chainCerts:
+        $ref: '#/definitions/ChainCerts'
+      serialNumber:
+        description: |
+          Serial number in hexadecimal format
+        type: string
+      expiresAfter:
+        description: >-
+          The date and time, in RFC3339 format, after which the certificate is no longer valid.
+        type: string
+        format: date-time
+      pickupUrl:
+        $ref: '#/definitions/PickupUrl'
+      pkcs12:
+        description: |
+          S/MIME certificate and private key in PKCS12 format protected by the provided password.
+          Only returned for SMIME_ENT certtype and only if no CSR is supplied.
+        type: string
+    required:
+      - trackingId
+  PendingCertificateResponse:
+    title: Certificate Response
+    type: object
+    properties:
+      trackingId:
+        $ref: '#/definitions/TrackingId'
+  AuditLog:
+    title: Audit log model
+    description: Audit log entry
+    type: object
+    properties:
+      activityDate:
+        description: >-
+          The date and time, in RFC3339 format, for when the audit log activity occurred
+        type: string
+        format: date-time
+      activity:
+        description: Activity that occurred
+        type: string
+      userName:
+        description: Name of the user that performed the activity
+        type: string
+      userRole:
+        description: Role of the user that performed the activity
+        type: string
+      comments:
+        description: Comments associated with the activity
+        type: string
+  CertificateBase:
+    type: object
+    properties:
+      trackingId:
+        $ref: '#/definitions/TrackingId'
+      status:
+        $ref: '#/definitions/CertificateStatus'
+      dn:
+        description: Distinguished name
+        type: string
+      serialNumber:
+        description: |
+          Serial number in hexadecimal format.
+        type: string
+      subjectAltName:
+        description: Subject alternative name (SAN)
+        type: array
+        items:
+          $ref: '#/definitions/GeneralName'
+      issueDateTime:
+        description: >-
+          The date and time, in RFC3339 format, for when the certificate was issued
+        type: string
+        format: date-time
+      expiresAfter:
+        description: >-
+          The date and time, in RFC3339 format, after which the certificate is no longer valid
+        type: string
+        format: date-time
+      signingAlg:
+        description: Signing algorithm
+        type: string
+      eku:
+        description: Extended Key Usage - applicable to all public SSL certificate types
+        type: string
+      keySize:
+        description: Key size
+        type: integer
+      keyType:
+        $ref: '#/definitions/KeyType'
+      org:
+        description: Organization in DN
+        type: string
+      ou:
+        description: Organizational unit.
+        type: array
+        items:
+          type: string
+      certType:
+        description: |
+          Certificate type, for example:
+            * STANDARD_SSL
+            * ADVANTAGE_SSL
+            * UC_SSL
+            * EV_SSL
+            * WILDCARD_SSL
+            * PRIVATE_SSL
+            * SMIME_ENT
+        type: string
+      tracking:
+        $ref: '#/definitions/TrackingData'
+      domainUsed:
+        description: Domain used
+        type: string
+      isThirdParty:
+        description: Whether this is a third-party certificate
+        type: boolean
+  Certificate:
+    title: Certificate model
+    description: Certificate and metadata
+    allOf:
+      - $ref: '#/definitions/CertificateBase'
+      - properties:
+          uri: 
+            $ref: '#/definitions/Uri'
+  JobId:
+    description: Identifier for an asynchronous job.
+    type: string
+    example: a627a9f3-6da9-4882-9ebe-c04258dc3415
+  AsyncJobDetails:
+    title: Status of the asynchronous request
+    description: Status of the asynchronous request
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/AsyncJobStatus'
+      resourceType:
+        description: Identifies the resource created or updated by the asynchronous job.
+        $ref: '#/definitions/AsyncJobResourceType'
+      resourceLocation:
+        description: Location of the resource affected by the asynchronous job. Only present if the status is SUCCESS. For example, /certificates/05559124
+        type: string
+      error:
+        description: Error in case processing the request failed. Only present if the status of the operation is ERROR.
+        $ref: '#/definitions/ErrorResponse'
+  AsyncJobStatus:
+    type: string
+    description: Asynchronous Operation Status
+    enum:
+      - PENDING
+      - SUCCESS
+      - ERROR
+      - FAILED
+  AsyncJobResourceType: 
+    type: string
+    description: Resource returned by this operation.
+    enum: 
+      - CERTIFICATE
+  CertificateEx:
+    title: Extended certificate model
+    description: Extended certificate and metadata
+    allOf:
+      - $ref: '#/definitions/CertificateBase'
+      - properties:
+          endEntityCert:
+            description: PEM-encoded certificate
+            type: string
+          csr:
+            description: PEM-encoded certificate signing request
+            type: string
+          creatorName:
+            description: Creator name, or authenticated DN if created via API
+            type: string
+          declineReason:
+            description: Decline reason
+            type: string
+          pickupUrl:
+            $ref: '#/definitions/PickupUrl'
+          chainCerts:
+            $ref: '#/definitions/ChainCerts'
+  CertificatePatchRequest:
+    title: A certificate patch request
+    description: Details about the patch operation and, if applicable, the decline reason associated with the operation.
+    type: object
+    properties:
+      operation:
+        $ref: '#/definitions/CertificateOperation'
+      declineReason:
+        description: |
+          Reason for the decline. Field is only supported if the CertificateOperation is 'DECLINE'
+        type: string
+        maxLength: 254
+  CertificateOperation:
+    type: string
+    description: | 
+      Operation on an existing certificate. 
+      SUSPEND and UNSUSPEND operations are valid only for certificates in a state of READY or ACTIVE
+      APPROVE and DECLINE operations are valid only for certificates in a state of PENDING
+    enum:
+      - SUSPEND
+      - UNSUSPEND
+      - APPROVE
+      - DECLINE
+  UserSpecifiableTrackingData:
+    title: User specifiable tracking data 
+    description: Tracking and notification information for a certificate
+    type: object
+    properties:
+      trackingInfo:
+        description: Free form tracking to attach to the record for the certificate
+        type: string
+        maxLength: 128
+      customFields:
+        $ref: '#/definitions/CustomFieldValues'
+      requesterName:
+        description: Requester name
+        type: string
+        maxLength: 255
+      requesterEmail:
+        description: Requester email
+        type: string
+        format: email
+        maxLength: 254
+      requesterPhone:
+        description: Requester phone number
+        type: string
+      additionalEmails:
+        description: |
+          An array of additional email addresses to receive the delivery notice and expiry notification for the certificate
+        type: array
+        items:
+          type: string
+          format: email
+          maxLength: 254
+  TrackingData:
+    title: Tracking data
+    allOf:
+      - $ref: '#/definitions/UserSpecifiableTrackingData'
+      - properties:
+          deactivated:
+            type: boolean
+          deactivatedOn:
+            description: |
+              The date and time the certificate was last deactivated. 
+              This is a read-only field and is returned only if deactivated=true.
+            type: string
+            format: date-time
+  CustomFieldValues:
+    type: object
+    properties:
+      text1:
+        type: string
+        maxLength: 500
+      text2:
+        type: string
+        maxLength: 500
+      text3:
+        type: string
+        maxLength: 500
+      text4:
+        type: string
+        maxLength: 500
+      text5:
+        type: string
+        maxLength: 500
+      text6:
+        type: string
+        maxLength: 500
+      text7:
+        type: string
+        maxLength: 500
+      text8:
+        type: string
+        maxLength: 500
+      text9:
+        type: string
+        maxLength: 500
+      text10:
+        type: string
+        maxLength: 500
+      text11:
+        type: string
+        maxLength: 500
+      text12:
+        type: string
+        maxLength: 500
+      text13:
+        type: string
+        maxLength: 500
+      text14:
+        type: string
+        maxLength: 500
+      text15:
+        type: string
+        maxLength: 500
+      number1:
+        type: number
+        format: float
+      number2:
+        type: number
+        format: float
+      number3:
+        type: number
+        format: float
+      number4:
+        type: number
+        format: float
+      number5:
+        type: number
+        format: float
+      date1:
+        type: string
+        format: date
+      date2:
+        type: string
+        format: date
+      date3:
+        type: string
+        format: date
+      date4:
+        type: string
+        format: date
+      date5:
+        type: string
+        format: date
+      email1:
+        $ref: '#/definitions/Email'
+      email2:
+        $ref: '#/definitions/Email'
+      email3:
+        $ref: '#/definitions/Email'
+      email4:
+        $ref: '#/definitions/Email'
+      email5:
+        $ref: '#/definitions/Email'
+      dropdown1:
+        type: string
+        maxLength: 50
+      dropdown2:
+        type: string
+        maxLength: 50
+      dropdown3:
+        type: string
+        maxLength: 50
+      dropdown4:
+        type: string
+        maxLength: 50
+      dropdown5:
+        type: string
+        maxLength: 50
+  BaseCustomField:
+    properties:
+      enabled:
+        type: boolean
+        default: false
+      label:
+        type: string
+        maxLength: 50
+      eformVisible:
+        type: boolean
+        default: false
+      mandatory:
+        $ref: '#/definitions/CustomFieldMandatory'
+      order:
+        type: integer
+  CustomFieldMandatory:
+    type: string
+    description: |
+      Mandatory requirements of custom field
+        - EFORM - mandatory for eForm only
+        - ADMIN_API - mandatory for "admin or API" only
+        - BOTH - mandatory for both eForm and "admin or API"
+        - NOT_MANDATORY - optional for eForm, admin, and API
+    enum:
+      - EFORM
+      - ADMIN_API
+      - BOTH
+      - NOT_MANDATORY
+  TextCustomField:
+    allOf:
+      - $ref: '#/definitions/BaseCustomField'
+      - properties:
+          multiline:
+            type: boolean
+  DropdownCustomField:
+    allOf:
+      - $ref: '#/definitions/BaseCustomField'
+      - properties:
+          options:
+            description: Comma-separated list of dropdown values
+            type: string
+            maxLength: 2000
+  CustomFields:
+    type: object
+    properties:
+      text1:
+        $ref: '#/definitions/TextCustomField'
+      text2:
+        $ref: '#/definitions/TextCustomField'
+      text3:
+        $ref: '#/definitions/TextCustomField'
+      text4:
+        $ref: '#/definitions/TextCustomField'
+      text5:
+        $ref: '#/definitions/TextCustomField'
+      text6:
+        $ref: '#/definitions/TextCustomField'
+      text7:
+        $ref: '#/definitions/TextCustomField'
+      text8:
+        $ref: '#/definitions/TextCustomField'
+      text9:
+        $ref: '#/definitions/TextCustomField'
+      text10:
+        $ref: '#/definitions/TextCustomField'
+      text11:
+        $ref: '#/definitions/TextCustomField'
+      text12:
+        $ref: '#/definitions/TextCustomField'
+      text13:
+        $ref: '#/definitions/TextCustomField'
+      text14:
+        $ref: '#/definitions/TextCustomField'
+      text15:
+        $ref: '#/definitions/TextCustomField'
+      number1:
+        $ref: '#/definitions/BaseCustomField'
+      number2:
+        $ref: '#/definitions/BaseCustomField'
+      number3:
+        $ref: '#/definitions/BaseCustomField'
+      number4:
+        $ref: '#/definitions/BaseCustomField'
+      number5:
+        $ref: '#/definitions/BaseCustomField'
+      date1:
+        $ref: '#/definitions/BaseCustomField'
+      date2:
+        $ref: '#/definitions/BaseCustomField'
+      date3:
+        $ref: '#/definitions/BaseCustomField'
+      date4:
+        $ref: '#/definitions/BaseCustomField'
+      date5:
+        $ref: '#/definitions/BaseCustomField'
+      email1:
+        $ref: '#/definitions/BaseCustomField'
+      email2:
+        $ref: '#/definitions/BaseCustomField'
+      email3:
+        $ref: '#/definitions/BaseCustomField'
+      email4:
+        $ref: '#/definitions/BaseCustomField'
+      email5:
+        $ref: '#/definitions/BaseCustomField'
+      dropdown1:
+        $ref: '#/definitions/DropdownCustomField'
+      dropdown2:
+        $ref: '#/definitions/DropdownCustomField'
+      dropdown3:
+        $ref: '#/definitions/DropdownCustomField'
+      dropdown4:
+        $ref: '#/definitions/DropdownCustomField'
+      dropdown5:
+        $ref: '#/definitions/DropdownCustomField'
+  AddClientRequest:
+    title: AddClient
+    type: object
+    properties:
+      clientName:
+        type: string
+        description: |
+          The name of the client.
+          _Note_: Be sure that the company name is the legal registered name of the company
+      friendlyClientName:
+        type: string
+        description: |
+          A "friendly" label for the client's organization.
+          This name is for your convenience and does not appear in the certificate.
+      address:
+        $ref: '#/definitions/Address'
+      authContact:
+        $ref: '#/definitions/AuthorizationContact'
+  BaseClient:
+    type: object
+    properties:
+      clientId:
+        description: |
+          Client ID of client.
+          For the primary client, this is 1.
+        type: integer
+        example: 1
+      clientName:
+        description: The company name of the client
+        type: string
+        example: Example Company
+      friendlyClientName:
+        type: string
+        example: Example Company Friendlyname
+      verificationStatus:
+        $ref: '#/definitions/VerificationStatus'
+      ovExpiryDate:
+        description: OV information expiry date -- only present if client has been APPROVED
+        type: string
+        format: date-time
+  Client:
+    title: Client
+    allOf:
+      - $ref: '#/definitions/BaseClient'
+      - properties:
+          evVerificationStatus:
+            $ref: '#/definitions/EvVerificationStatus'
+          evExpiryDate:
+            description: EV information expiry date -- only present if evVerificationStatus has been APPROVED
+            type: string
+            format: date-time
+          qvVerificationStatus:
+            $ref: '#/definitions/QvVerificationStatus'
+          qvExpiryDate:
+            description: QV information expiry date -- only present if qvVerificationStatus has been APPROVED
+            type: string
+            format: date-time
+          uri:
+            $ref: '#/definitions/Uri'
+  ClientEx:
+    title: Extended Client Model
+    allOf:
+      - $ref: '#/definitions/BaseClient'
+      - properties:
+          address:
+            $ref: '#/definitions/Address'
+          authContact:
+            $ref: '#/definitions/AuthorizationContact'
+          organizations:
+            type: array
+            items:
+              $ref: '#/definitions/Organization'
+            description:
+              Organizations associated with the primary client, for other clients, this is omitted. 
+            example:
+              - name: First Organization
+                verificationStatus: APPROVED
+              - name: Second Organization
+                verificationStatus: PENDING
+              - name: Third Organization
+                verificationStatus: EXPIRED
+          evInfo:
+            $ref: '#/definitions/EvInfo'
+          qvInfo:
+            $ref: '#/definitions/QvInfo'
+  SimpleAddress:
+    title: Address
+    type: object
+    properties:
+      country:
+        type: string
+        description: ISO 3166 2-letter country code
+        example: CA
+      stateOrProvince:
+        type: string
+        example: ON
+        description: Only mandatory for United States and Canada
+  Address:
+    allOf:
+      - $ref: '#/definitions/SimpleAddress'
+      - properties:
+          street1:
+            type: string
+            example: 1000 Innovation Drive
+          street2:
+            type: string
+            example: Suite 5
+          city:
+            type: string
+            example: Ottawa
+          zipOrPostalCode:
+            type: string
+            example: K2K 3E7
+            description: Only mandatory for United States and Canada        
+  AuthorizationContact:
+    type: object
+    properties:
+      name:
+        type: string
+        description: |
+          The name of the person to contact to authenticate the request. This must be the name of a person in the client company with the authority to verify the request. It must be the person's proper name rather than their title or management position
+        example: John Smith
+      position:
+        description: The contact's job position or title
+        type: string
+        example: Software Developer
+      phone:
+        type: string
+        example: 555-555-5555
+      emailAddress:
+        type: string
+        format: email
+        description: |
+          The email address of the person to contact to authenticate the request.
+          _Note_: Entrust will ask the contact to complete an Authorization letter after receiving the request
+        maxLength: 254
+  EvInfo:
+    type: object
+    properties:
+      status: 
+        $ref: '#/definitions/VerificationStatus'
+      statusDate:
+        description: EV information vetting date
+        type: string
+        format: date-time
+      expiryDate:
+        description: EV information expiry date
+        type: string
+        format: date-time
+      placeOfBusiness:
+        $ref: '#/definitions/PlaceOfBusiness'
+      incorporation:
+        $ref: '#/definitions/Incorporation'
+      higherAuthority:
+        $ref: '#/definitions/HigherAuthority'
+      contractSigner:
+        $ref: '#/definitions/ContractSigner'
+  QvInfo:
+    type: object
+    properties:
+      status: 
+        $ref: '#/definitions/VerificationStatus'
+      expiryDate:
+        description: QV information expiry date
+        type: string
+        format: date-time
+      organizationIdType:
+        description: |
+          The Payment Services Directive (PSD) allows one of three types of Organization Identifier: VAT number, PSD number, or NTR number.
+        type: string
+        example: "VAT_NUMBER"
+      organizationIdNumber:
+        description: A unique identifier assigned to your organization by a registration authority. This may be a VAT number, PSD Number, or NTR number.
+        type: string
+        example: "VATES-123"
+      ncaId:
+        description: The alphanumeric identification number assigned to the NCA for your country. 
+        type: string
+        example: "ES-BE"
+      ncaName:
+        description: The name of the National Competent Authority for your country. 
+        type: string
+        example: "Bank of Spain"
+      roles:
+        description: |
+          Your organization can be assigned one to four roles that can be included in your PSD2 certificate. Please note that if your organization is designated as a Financial Institution, you automatically qualify for all four roles.
+          The four roles are:
+            * Account Information
+            * Account Servicing
+            * Payment Information 
+            * Card Issuance
+        type: array
+        items:
+          type: string
+        example: ["Account Information", "Payment Information"]
+  PlaceOfBusiness:
+    type: object
+    properties:
+      organization:
+        type: string
+        example: Example Organization
+      address:
+        $ref: '#/definitions/Address'
+  Incorporation:
+    type: object
+    properties:
+      agency:
+        type: string
+      registrationNumber:
+        type: string
+      date:
+        type: string
+        format: date-time
+      address:
+        $ref: '#/definitions/SimpleAddress'
+  HigherAuthority:
+    type: object
+    properties:
+      name:
+        type: string
+      title:
+        type: string
+      email: 
+        $ref: '#/definitions/Email'
+      phone:
+        type: string
+  ContractSigner:
+    allOf:
+      - $ref: '#/definitions/AuthorizationContact'
+      - properties:
+          address:
+            $ref: '#/definitions/Address'
+          company:
+            type: string
+  InventoryItem:
+    type: object
+    required:
+      [productType, usedCount]
+    properties:
+      productType: 
+        type: string
+        example: STANDARD_SSL
+      consumptionType:
+        description: | 
+          Inventory consumption model for this product
+          Note: only included for UNLIMITED consumptionType
+        type: string
+        example: UNLIMITED
+      totalCount:
+        description: Total inventory for this product type ever added to the account
+        type: integer
+        example: 10
+      remainingCount:
+        description: Inventory for this product type that has not been used, and has not expired
+        type: integer
+        example: 1
+      usedCount:
+        description: Count of consumed inventory for this product type. This count does not include expired inventory
+        type: integer
+        example: 4
+  VerificationStatus:
+    type: string
+    enum:
+      - APPROVED
+      - DECLINED
+      - PENDING
+      - PENDING_FINAL_APPROVAL
+      - DEACTIVATED
+      - EXPIRED
+  EvVerificationStatus:
+    allOf:
+      - $ref: '#/definitions/VerificationStatus'
+      - description: EV information verification status -- only present if EV information has been submitted for the client
+  QvVerificationStatus:
+    allOf:
+      - $ref: '#/definitions/VerificationStatus'
+      - description: QV information verification status -- only present if QV information has been submitted for the client
+  Organization:
+    type: object
+    properties:
+      name:
+        type: string
+        example: Example Organization
+      verificationStatus:
+        $ref: '#/definitions/VerificationStatus'
+      clientId:
+        type: integer
+        description: |
+          Client ID of client.
+          For the primary client, this is 1.
+          Omitted if only a single client's orgs are requested
+        example: 1
+  OrganizationalUnit:
+    type: object
+    properties:
+      name:
+        type: string
+        example: Example Organizational Unit
+      verificationStatus:
+        $ref: '#/definitions/VerificationStatus'
+      clientId:
+        type: integer
+        description: |
+          Client ID of client.
+          For the primary client, this is 1.
+          Omitted if only a single client's orgs are requested
+        example: 2
+  AddDomainRequest:
+    title: Add Domain Request
+    type: object
+    allOf:
+    - properties:
+        domainName:
+          description: Domain
+          type: string
+    - $ref: '#/definitions/UpdateDomainRequest'
+  UpdateDomainRequest:
+    title: Reverify Domain Request
+    type: object
+    properties:
+      verificationMethod:
+        $ref: '#/definitions/VerificationMethod'
+      emailMethod:
+        description: Email addresses to use for email verification method
+        type: object
+        properties:
+          emailSource:
+            description: |
+              Source for email address:
+                - INCLUDE_WHOIS - use email from WHOIS lookup
+                  If WHOIS returns more than one email address, only one will be selected.
+                - SPECIFIED - use specified email address from "email" property
+                  The specified email must match an email address from either WHOIS or from the constructed email list.
+            type: string
+            enum:
+              - INCLUDE_WHOIS
+              - SPECIFIED
+          email:
+            $ref: '#/definitions/Email'
+  DomainEx:
+    title: Extended domain model
+    description: Extended domain and metadata
+    allOf:
+    - $ref: '#/definitions/Domain'
+    - properties:
+        dnsMethod:
+          description: Properties for DNS verification method
+          type: object
+          properties:
+            recordDomain:
+              description: Domain for DNS record
+              type: string
+            recordType:
+              description: |
+                DNS record type.
+                Only TXT record type is currently supported.
+              type: string
+              default: TXT
+            recordValue:
+              description: Random value for DNS record
+              type: string
+        emailMethod:
+          description: Email addresses for email verification method
+          type: array
+          items:
+            $ref: '#/definitions/Email'
+        webServerMethod:
+          description: Properties for web server verification method
+          type: object
+          properties:
+            fileLocation:
+              description: URL of file for verification
+              type: string
+            fileContents:
+              description: Random value for file contents
+              type: string     
+  Domain:
+    title: Domain model
+    description: Domain and metadata
+    type: object
+    properties:
+      domainName:
+        description: Domain name
+        type: string
+      verificationMethod:
+        $ref: '#/definitions/VerificationMethod'
+      status:
+        $ref: '#/definitions/DomainStatus'
+      ovEligible:
+        description: Whether this domain can be used for OV certificates
+        type: boolean
+      ovExpiry:
+        description: Expiry time of verified OV information
+        type: string
+        format: date-time
+      evEligible:
+        description: Whether this domain can be used for EV certificates
+        type: boolean
+      evExpiry:
+        description: Expiry time of verified EV information.
+        type: string
+        format: date-time
+      clientId:
+        description: Client id of the client to which the domain belongs to.
+        type: integer
+  CertificateStatus:
+    type: string
+    description: Certificate Status
+    enum:
+      - ACTIVE
+      - APPROVED
+      - DECLINED
+      - EXPIRED
+      - NA
+      - PENDING
+      - PENDING_QUORUM
+      - READY
+      - REISSUED
+      - REISSUING
+      - RENEWED
+      - RENEWING
+      - REVOKED
+      - SUSPENDED
+      - DEACTIVATED
+  KeyType:
+    description: Key type
+    type: string
+    enum:
+      - RSA
+      - EC
+      - OTHER
+  GeneralName:
+    type: object
+    properties:
+      type:
+        $ref: '#/definitions/GeneralNameType'
+      value:
+        description: Value of general name
+        type: string
+  GeneralNameType:
+    type: string
+    enum:
+    - otherName
+    - rfc822Name
+    - dNSName
+    - x400Address
+    - directoryName
+    - ediPartyName
+    - uniformResourceIdentifier
+    - iPAddress
+    - registeredID
+  CRLReason:
+    type: string
+    description: RFC5280 CRL Reason Code
+    enum:
+      - keyCompromise
+      - affiliationChanged
+      - superseded
+      - cessationOfOperation
+  DomainStatus:
+    type: string
+    description: |
+      Verification Status
+        - APPROVED - approved for use by the client
+        - DECLINED
+        - CANCELLED
+        - INITIAL_VERIFICATION - submitted for verification for the first time and has not yet been approved or declined. The domain is not useable.
+        - RE_VERIFICATION - resubmitted for verification and has not yet been approved or declined. The domain is useable.
+        - EXPIRED - domain has expired
+        - EXPIRING - domain is within 90 days of expiration
+    enum:
+      - APPROVED
+      - DECLINED
+      - CANCELLED
+      - INITIAL_VERIFICATION
+      - RE_VERIFICATION
+      - EXPIRED
+      - EXPIRING
+  VerificationMethod:
+    type: string
+    description: Verification method
+    enum:
+      - DNS
+      - EMAIL
+      - MANUAL
+      - WEB_SERVER
+  TrackingId:
+    description: Tracking ID for a certificate
+    type: integer
+    format: int32
+  Email:
+    description: Email address
+    type: string
+    format: email
+    maxLength: 254
+  Summary:
+    type: object
+    properties:
+      timestamp:
+        description:  The date and time instance, in RFC3339 format, for when we received the request.
+        type: string
+        format: date-time
+      elapsed:
+        description: Elapsed time it took to process the request, in milliseconds
+        type: integer
+      offset:
+        description: Offset of the result set
+        type: integer
+      limit:
+        description: Maximum number of items to return
+        type: integer
+      total:
+        description: Count of total number of items
+        type: integer
+      sort:
+        description: Ordering of the results
+        type: string
+    example:
+      timestamp: '2018-03-13T13:12:12.340Z'
+      elapsed: 380
+      offset: 1
+      limit: 1000
+      total: 2300
+      sort: 'trackingId:desc'
+  ErrorResponse:
+    description: Error response
+    type: object
+    properties:
+      status:
+        description: HTTP response status code
+        type: integer
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/Error'
+    required:
+      - status
+      - errors
+    example:
+      status: 400
+      errors:
+        - message: 'The key size must be 1024, 1536, 2048, 3072 or 4096 bits.'
+          field: csr
+  Error:
+    description: Error
+    type: object
+    properties:
+      message:
+        description: A human-readable representation of the error
+        type: string
+      field:
+        description: Request field generating the error
+        type: string
+      cause:
+        $ref: '#/definitions/Error'
+    required:
+      - message
+  ChainCerts:
+    description: Array of PEM-encoded certificates. Always use the certificate chain provided by the API. Do not rely on the hard-coded certificate chain - it assumes a specific intermediate/issuing CA certificate that could change.
+    type: array
+    items:
+      type: string
+  PickupUrl:
+    type: string
+    description: |
+      URL to pick up the certificate
+      Only returned if 'Pickup' would be a valid action on this certificate in the certificates grid.
+    example: 'https://www.entrust.net/ssl/certpickup.cfm?id=5555555-0C227220-A9C9-46A9-95B7-E412C4264F5F' 
+  Uri:
+    type: string
+    description: An unambiguous identification of a resource
+    example: '/enterprise/v2/certificates/5555555'
+parameters:
+  auditLogFieldsParam:
+    name: fields
+    in: query
+    type: string
+    default: activityDate,activity,userName,userRole,comments
+    description: |
+      Audit log fields selector.
+      The * character specifies all available fields.
+  certificateRequestFieldsParam:
+    name: fields
+    in: query
+    type: string
+    default: trackingId,expectedExpiry,signingAlg,eku,status
+    description: |
+      Certificate request fields selector.
+      The * character specifies all available fields.
+  certificateFieldsParam:
+    name: fields
+    in: query
+    type: string
+    default: trackingId,dn,serialNumber,expiresAfter,signingAlg,eku,status
+    description: |
+      Certificate fields selector.
+      The * character specifies all available fields.
+  sort:
+    name: sort
+    description: |
+      Sort columns and associated directions (asc, desc) to sort the result set by. 
+      Note: the uri field is not sortable
+    in: query
+    type: string
+  offset:
+    name: offset
+    description: |
+      The index of the first result to return.
+      Use with limit to get the next page of search results.
+    in: query
+    type: integer
+    default: 0
+    minimum: 0
+  limit:
+    name: limit
+    in: query
+    type: integer
+    default: 25
+    minimum: 1
+    maximum: 1000
+    description: The maximum number of items to return. Currently limited to 1000; however, this is subject to change and applications must be able to adapt to maximum limit changes.
+securityDefinitions:
+  basicAuth:
+    type: basic
+    description: Create an API user in your Entrust Cloud Portal under Administration->User Management->API Users. Use the client certificate selected as part of the user creation process to authenticate to the API via HTTPS Client Auth, then provide the username and password as part of an HTTP basic authentication header.
