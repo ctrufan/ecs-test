@@ -53,6 +53,8 @@ galaxy_info:
     - development
     - ssl
     - tls
+    - ecs
+    - api
 
 dependencies: []
   # List your role dependencies here, one per line. Be sure to remove the '[]' above,
