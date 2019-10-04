@@ -1,6 +1,5 @@
 ---
 
 - hosts: localhost
-  become: true
   roles:
     - thadreez.ecs_test
