@@ -1,7 +1,7 @@
 ---
 # vars file for ECS-test
 
-working_path: /../ansible/roles/thadreez.ecs_test
+working_path: /root/.ansible/roles/thadreez.ecs_test
 
 # Values used for private key generation
 privatekey_path: '{{ working_path }}/files/prvkey.pem'
