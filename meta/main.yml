@@ -51,10 +51,10 @@ galaxy_info:
 
   galaxy_tags: []
   galaxy_tags:
-    - SSL/TLS
+    - SSL-TLS
     - DevOps
-    - API
-    - EDC/ECS
+    - APIs
+    - EDC-ECS
     - Certificate-Management
     - Web
     - Server
