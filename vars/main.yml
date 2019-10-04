@@ -4,10 +4,10 @@
 working_path: /../ansible/roles/thadreez.ecs_test
 
 # Values used for private key generation
-privatekey_path: '{{ working_path }}/New-issued-certs-keys/prvkey.pem'
+privatekey_path: '{{ working_path }}/files/new-issued-certs-keys/prvkey.pem'
 
 # Values used for the CSR generation
-csr_path: '{{ working_path }}/New-issued-certs-keys/csr.pem'
+csr_path: '{{ working_path }}/files/new-issued-certs-keys/csr.pem'
 cert_common_name: ansible.com
 cert_organization_name: Your Organization
 cert_organizational_unit_name: OrgUnit
@@ -15,7 +15,7 @@ cert_country_name: US
 cert_state_or_province_name: MA
 
 # Values used when requesting the certificate from ECS API
-cert_path: '{{ working_path }}/New-issued-certs-keys/cert.pem'
+cert_path: '{{ working_path }}/files/new-issued-certs-keys/cert.pem'
 cert_type: UC_SSL
 
 #Request a renew if certificate in cert_path exists and has 10 days remaining
