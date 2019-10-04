@@ -42,6 +42,7 @@ Before running the example you will need to:
        - APIusername.
 	   - APIpassword.
 	   - Approved domains/etc.
+	3- configure the {{working_path}} to where ansible role will be installed i.e  /home/user/.ansible/roles
 
     Example Playbook
 	
