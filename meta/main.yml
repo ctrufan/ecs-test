@@ -48,15 +48,15 @@ galaxy_info:
         - all
         
   galaxy_tags:
-    - SSL-TLS
-    - DevOps
-    - APIs
-    - EDC-ECS
-    - Certificate-Management
-    - Web
-    - Server
-    - Auto-Development
-    - Cyber-security 
+    - ssl-tls
+    - devops
+    - apis
+    - edc-ecs
+    - certificate-management
+    - webeb
+    - server
+    - auto-development
+    - cyber-security 
 
 dependencies: []
   # List your role dependencies here, one per line. Be sure to remove the '[]' above,
